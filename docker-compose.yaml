@@ -1,0 +1,22 @@
+version: "3.9"
+
+networks:
+  simple-bank-network:
+    name: simple-bank-network
+    driver: bridge
+
+services:
+  api:
+    container_name: simple_bank_api
+    networks:
+      - simple-bank-network
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        ARCH: amd64
+        GO_VERSION: 1.18.3
+        ENV: ${ENV}
+    ports:
+      - "9090:9090"
+    command: [ "/app/main" ]

@@ -1,0 +1,73 @@
+Project flingzy {
+  database_type: 'PostgreSQL'
+  Note: '''
+    # Flingzy Database
+  '''
+}
+
+Table users as U {
+  id varchar(28) [pk]
+  first_name varchar [not null]
+  last_name varchar [not null]
+  email varchar [unique, not null]
+  phone varchar [unique, not null]
+  age bigint [not null]
+  gender varchar [not null]
+  ethnicity "varchar[]" [not null, note: 'must be one of American Indian, Black/African Descent, East Asian, Hispanic/Latino, Middle Easter, Pacific Islander, South Asian, Southeast Asian, White/Caucasian, Other']
+  nsfw bool [not null]
+  metadata jsonb [not null, note: 'includes settings data like preference, audio call price, video call price']
+  created_at timestamptz [not null, default: `now()`]
+  Indexes {
+    age
+    gender
+    ethnicity
+    nsfw
+  }
+}
+
+Table accounts as A {
+  id bigserial [pk]
+  user_id varchar(28) [ref: > U.id, not null]
+  balance bigint [not null]
+  created_at timestamptz [not null, default: `now()`]
+
+  Indexes {
+    user_id
+  }
+}
+
+Table entries {
+  id bigserial [pk]
+  account_id bigint [ref: > A.id, not null]
+  amount bigint [not null, note: 'can be negative or positive']
+  type varchar [not null, note: 'must be one of chat,audio,video,payin,payout']
+  created_at timestamptz [not null, default: `now()`]
+
+  Indexes {
+    account_id
+  }
+}
+
+Table transfers {
+  id bigserial [pk]
+  from_account_id bigint [ref: > A.id, not null]
+  to_account_id bigint [ref: > A.id, not null]
+  amount bigint [not null, note: 'must be positive']
+  type varchar [not null, note: 'must be one of chat,audio,video']
+  created_at timestamptz [not null, default: `now()`]
+  Indexes {
+    from_account_id
+    to_account_id
+    (from_account_id, to_account_id)
+  }
+}
+Table sessions {
+  id uuid [pk]
+  user_id varchar(28) [ref: > U.id, not null]
+  refresh_token varchar [not null]
+  user_agent varchar [not null]
+  client_ip varchar [not null]
+  is_blocked boolean [not null, default: false]
+  expires_at timestamptz [not null]
+  created_at timestamptz [not null, default: `now()`]
+}
